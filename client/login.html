@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+<title>Realtime Chat</title>
+
+<link rel="stylesheet" href="style.css">
+
+</head>
+
+<body>
+
+<div class="container">
+
+<div class="sidebar">
+
+<h3>Online Users</h3>
+
+<ul id="users"></ul>
+
+</div>
+
+<div class="chat">
+
+<h2>Chat Room</h2>
+
+<div id="messages"></div>
+
+<p id="typing"></p>
+
+<input id="msg" placeholder="Type message..." autocomplete="off">
+
+<button onclick="sendMessage()">Send</button>
+
+</div>
+
+</div>
+
+<script src="/socket.io/socket.io.js"></script>
+
+<script src="script.js"></script>
+
+</body>
+
+</html>

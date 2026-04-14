@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Premium Chat</title>
+
+<script src="/socket.io/socket.io.js"></script>
+
+<!-- Google Font -->
+<link href="https://fonts.googleapis.com/css2?family=Poppins&display=swap" rel="stylesheet">
+
+<style>
+
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+font-family:'Poppins',sans-serif;
+}
+
+body{
+background:linear-gradient(135deg,#0f2027,#203a43,#2c5364,#123456);
+background-size: 400% 400%;
+animation: gradientBG 15s ease infinite;
+height:100vh;
+display:flex;
+justify-content:center;
+align-items:center;
+}
+
+@keyframes gradientBG {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* MAIN CONTAINER */
+.chat-app{
+width:95%;
+max-width:1200px;
+height:90vh;
+background:rgba(17, 27, 33, 0.4);
+backdrop-filter:blur(15px);
+-webkit-backdrop-filter:blur(15px);
+border:1px solid rgba(255, 255, 255, 0.1);
+border-radius:15px;
+display:flex;
+overflow:hidden;
+box-shadow:0 15px 35px rgba(0,0,0,0.5);
+}
+
+/* SIDEBAR */
+.sidebar{
+width:300px;
+background:rgba(32, 44, 51, 0.3);
+padding:20px;
+border-right:1px solid rgba(255, 255, 255, 0.05);
+}
+
+.sidebar h2{
+color:#00a884;
+margin-bottom:15px;
+}
+
+.user{
+padding:10px;
+border-radius:10px;
+margin-bottom:8px;
+background:rgba(42, 57, 66, 0.5);
+transition: 0.3s;
+}
+.user:hover {
+background:rgba(42, 57, 66, 0.8);
+}
+
+/* CHAT AREA */
+.chat-area{
+flex:1;
+display:flex;
+flex-direction:column;
+}
+
+/* HEADER */
+.header{
+background:rgba(32, 44, 51, 0.3);
+padding:15px;
+font-size:18px;
+font-weight:bold;
+color:#00a884;
+border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+/* MESSAGES */
+.messages{
+flex:1;
+padding:20px;
+overflow-y:auto;
+display:flex;
+flex-direction:column;
+gap:10px;
+}
+
+/* MESSAGE BUBBLE */
+.message{
+max-width:60%;
+padding:12px 15px;
+border-radius:15px;
+position:relative;
+animation:fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn{
+from{opacity:0; transform:translateY(10px);}
+to{opacity:1; transform:translateY(0);}
+}
+
+.left{
+background:rgba(32, 44, 51, 0.6);
+backdrop-filter: blur(5px);
+border: 1px solid rgba(255, 255, 255, 0.05);
+align-self:flex-start;
+}
+
+.right{
+background:rgba(0, 92, 75, 0.6);
+backdrop-filter: blur(5px);
+border: 1px solid rgba(0, 168, 132, 0.2);
+align-self:flex-end;
+}
+
+.time{
+font-size:10px;
+opacity:0.6;
+margin-top:5px;
+}
+
+/* INPUT AREA */
+.input-area{
+display:flex;
+padding:15px;
+background:rgba(32, 44, 51, 0.3);
+border-top:1px solid rgba(255, 255, 255, 0.05);
+gap:10px;
+}
+
+.input-area input{
+flex:1;
+padding:12px;
+border:1px solid rgba(255, 255, 255, 0.1);
+border-radius:10px;
+outline:none;
+background:rgba(42, 57, 66, 0.6);
+color:white;
+}
+
+.input-area button{
+background:#00a884;
+border:none;
+padding:12px 20px;
+border-radius:10px;
+cursor:pointer;
+color:white;
+transition:0.3s;
+}
+
+.input-area button:hover{
+background:#02c39a;
+}
+
+/* SCROLLBAR */
+.messages::-webkit-scrollbar{
+width:5px;
+}
+.messages::-webkit-scrollbar-thumb{
+background:#00a884;
+border-radius:10px;
+}
+
+/* EMOJI & ATTACHMENT */
+.icon-btn {
+  background: transparent;
+  border: none;
+  color: #00a884;
+  font-size: 20px;
+  cursor: pointer;
+  padding: 10px;
+  transition: 0.3s;
+}
+.icon-btn:hover {
+  color: #02c39a;
+}
+
+.emoji-picker {
+  display: none;
+  position: absolute;
+  bottom: 80px;
+  left: 15px;
+  background: rgba(32, 44, 51, 0.8);
+  backdrop-filter: blur(15px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  padding: 10px;
+  box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+  grid-template-columns: repeat(5, 1fr);
+  gap: 5px;
+  font-size: 20px;
+  z-index: 100;
+}
+.emoji-picker.show {
+  display: grid;
+}
+.emoji {
+  cursor: pointer;
+  padding: 5px;
+  text-align: center;
+}
+.emoji:hover {
+  background: #2a3942;
+  border-radius: 5px;
+}
+
+.msg-image {
+  max-width: 100%;
+  border-radius: 10px;
+  margin-top: 5px;
+}
+.msg-file {
+  display: inline-block;
+  margin-top: 5px;
+  padding: 8px 12px;
+  background: #2a3942;
+  color: #00a884;
+  text-decoration: none;
+  border-radius: 5px;
+  font-weight: bold;
+}
+.msg-file:hover {
+  background: #02c39a;
+  color: white;
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="chat-app">
+
+<!-- SIDEBAR -->
+<div class="sidebar">
+<h2>Users</h2>
+<div id="users"></div>
+</div>
+
+<!-- CHAT -->
+<div class="chat-area">
+
+<div class="header">Realtime Chat</div>
+
+<div id="messages" class="messages"></div>
+
+<div class="input-area" style="position: relative;">
+<button class="icon-btn" id="emojiBtn">😀</button>
+<button class="icon-btn" id="attachBtn">📎</button>
+<input type="file" id="fileInput" style="display: none;">
+<div class="emoji-picker" id="emojiPicker">
+  <div class="emoji">😀</div><div class="emoji">😂</div><div class="emoji">❤️</div><div class="emoji">😍</div><div class="emoji">👍</div>
+  <div class="emoji">🎉</div><div class="emoji">🔥</div><div class="emoji">😎</div><div class="emoji">🤔</div><div class="emoji">😢</div>
+  <div class="emoji">🙌</div><div class="emoji">✨</div><div class="emoji">💯</div><div class="emoji">🙏</div><div class="emoji">😊</div>
+</div>
+<input id="msg" placeholder="Type a message...">
+<button onclick="send()">Send</button>
+</div>
+
+</div>
+</div>
+
+<script>
+
+const socket = io();
+const username = prompt("Enter your name");
+
+socket.emit("join", username);
+
+const msgBox = document.getElementById("msg");
+const messages = document.getElementById("messages");
+
+function send(){
+const text = msgBox.value;
+if(text.trim() === "") return;
+
+socket.emit("sendMessage", { type: 'text', content: text });
+msgBox.value="";
+}
+
+// Emoji Picker Logic
+const emojiBtn = document.getElementById("emojiBtn");
+const emojiPicker = document.getElementById("emojiPicker");
+emojiBtn.addEventListener("click", () => {
+  emojiPicker.classList.toggle("show");
+});
+document.querySelectorAll(".emoji").forEach(el => {
+  el.addEventListener("click", () => {
+    msgBox.value += el.innerText;
+    emojiPicker.classList.remove("show");
+  });
+});
+
+// File Upload Logic
+const attachBtn = document.getElementById("attachBtn");
+const fileInput = document.getElementById("fileInput");
+
+attachBtn.addEventListener("click", () => fileInput.click());
+
+fileInput.addEventListener("change", async (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+
+  const formData = new FormData();
+  formData.append("file", file);
+
+  try {
+    const res = await fetch("/upload", {
+      method: "POST",
+      body: formData
+    });
+    const data = await res.json();
+    if (data.url) {
+      const isImage = file.type.startsWith("image/");
+      socket.emit("sendMessage", {
+        type: isImage ? "image" : "file",
+        content: data.url,
+        fileName: data.fileName
+      });
+    }
+  } catch (err) {
+    console.error("Upload failed", err);
+    alert("File upload failed!");
+  }
+  fileInput.value = ""; // reset
+});
+
+/* RECEIVE MESSAGE */
+socket.on("message",(data)=>{
+
+const div = document.createElement("div");
+
+div.classList.add("message");
+div.classList.add(data.user === username ? "right":"left");
+
+let contentHtml = "";
+if (data.type === "image") {
+  contentHtml = `<img src="${data.content}" class="msg-image">`;
+} else if (data.type === "file") {
+  contentHtml = `<a href="${data.content}" target="_blank" download="${data.fileName}" class="msg-file">📎 ${data.fileName}</a>`;
+} else {
+  // text
+  contentHtml = `<div>${data.content || data.message || ""}</div>`;
+}
+
+div.innerHTML = `
+<b>${data.user}</b><br>
+${contentHtml}
+<div class="time">${data.time}</div>
+`;
+
+messages.appendChild(div);
+messages.scrollTop = messages.scrollHeight;
+
+});
+
+/* USERS LIST */
+socket.on("users",(list)=>{
+
+const userDiv = document.getElementById("users");
+userDiv.innerHTML="";
+
+list.forEach(u=>{
+const div=document.createElement("div");
+div.className="user";
+div.innerText=u;
+userDiv.appendChild(div);
+});
+
+});
+
+/* ENTER KEY SEND */
+msgBox.addEventListener("keypress",(e)=>{
+if(e.key==="Enter") send();
+});
+
+</script>
+
+</body>
+</html>
